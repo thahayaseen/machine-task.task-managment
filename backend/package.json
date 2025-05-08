@@ -1,0 +1,11 @@
+{
+  "name": "bakend",
+  "version": "1.0.0",
+  "description": "backend for task managment app",
+  "main": "index.js",
+  "scripts": {
+    "test": "npm run dev"
+  },
+  "author": "",
+  "license": "ISC"
+}
