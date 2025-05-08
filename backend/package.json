@@ -2,10 +2,24 @@
   "name": "bakend",
   "version": "1.0.0",
   "description": "backend for task managment app",
-  "main": "index.js",
+  "main": "index.ts",
   "scripts": {
-    "test": "npm run dev"
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc && tsc-alias",
+    "start": "node ./dist/index.js",
+    "lint": "eslint src --ext .ts,.tsx",
+    "lint:fix": "eslint src --ext .ts,.tsx --fix"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "express": "^5.1.0"
+  },
+  "devDependencies": {
+    "@types/dotenv": "^6.1.1",
+    "@types/express": "^5.0.1",
+    "@types/mongoose": "^5.11.96",
+    "dotenv": "^16.5.0",
+    "tsx": "^4.19.4"
+  }
 }
