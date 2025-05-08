@@ -1,0 +1,35 @@
+@import "tailwindcss";
+
+/* LIGHT (default) THEME */
+@theme inline {
+  --color-primary: var(--color-primary);
+  --color-secondary: var(--color-secondary);
+  --color-bgcolor: var(--color-bg);
+
+}
+/* Base Light Theme (default) */
+:root {
+  --color-primary: #dddddd; /* Indigo-500 */
+  --color-secondary: #000000; /* Emerald-400 */
+  --color-accent: #fbbf24; /* Amber-400 */
+  --color-muted: #9ca3af; /* Gray-400 */
+  --color-bg: #a0bdcf; /* White */
+  --color-text: #1f2937; /* Gray-800 */
+}
+
+/* Dark Mode Theme */
+.dark {
+  --color-primary: #0c0761; /* Indigo-600 */
+
+  --color-secondary: #ffffff; /* Emerald-500 */
+  --color-accent: #f59e0b; /* Amber-500 */
+  --color-muted: #6b7280; /* Gray-500 */
+  --color-bg: #000000; /* Gray-800 */
+  --color-text: #f3f4f6; /* Gray-100 */
+}
+
+/* Main Styling */
+.main {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+}
