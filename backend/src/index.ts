@@ -1,9 +1,11 @@
 import express from "express";
 const app = express();
-import { env } from "@/config/env.config";
-import { connectDB } from "./config/mongo.config";
-console.log(env.PORT,'nums is');
-
+import { env, connectDB } from "@/config";
+import morgon from "morgan";
+import api from "@/router";
+app.use(express.json());
+app.use(morgon("dev"));
+app.use("/api", api);
 const startServer = async () => {
   await connectDB();
   app.listen(env.PORT, () => {

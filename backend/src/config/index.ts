@@ -1,1 +1,2 @@
-export { env } from "@/config/env.config";
+export { env } from "./env.config";
+export { connectDB } from "./sequelize.config";

@@ -1,5 +1,5 @@
 {
-  //  "extends": "../shared/tsconfig.json",
+  //  "q": "../shared/tsconfig.json",
   "compilerOptions": {
     "target": "ES6",
     "module": "CommonJS",
@@ -37,5 +37,5 @@
     "types",
     "../shared/types/**/*.ts",
     "types"
-  ]
+, "src/config/sequelize.config.ts"  ]
 }
