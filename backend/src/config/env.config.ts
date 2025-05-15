@@ -10,5 +10,8 @@ export const env = {
   },
   get JWT_ACCESS_SECRET(){
     return process.env.JWT_ACCESS_SECRET
+  },
+  get JWT_REFRESH_SECRET(){
+    return process.env.JWT_REFRESH_SECRET
   }
 };

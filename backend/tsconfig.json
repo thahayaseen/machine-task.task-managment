@@ -37,5 +37,5 @@
     "types",
     "../shared/types/**/*.ts",
     "types"
-, "src/config/sequelize.config.ts"  ]
+, "src/config/mongo.config.ts"  ]
 }

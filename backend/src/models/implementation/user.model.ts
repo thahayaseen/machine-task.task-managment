@@ -7,8 +7,8 @@ const userSchema = new Schema<IUserModel>({
   username: { type: String, required: true },
   role: {
     type: String,
-    enum: ["admin", "user"], // Correctly declare the enum
-    default: "user", // Optional default value
+    enum: ["admin", "user"],
+    default: "user",
   },
   email: {
     type: String,
@@ -20,4 +20,4 @@ const userSchema = new Schema<IUserModel>({
   },
 });
 
-export default mongoose.model<IUserModel>("User", userSchema);
+export const userModel = mongoose.model<IUserModel>("User", userSchema);
