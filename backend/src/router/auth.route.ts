@@ -1,6 +1,6 @@
 import { Router } from "express";
 const router = Router();
-router.get("/", (req, res) => {
+router.post("/signin", (req, res) => {
   console.log("herere");
 
   res.json("ok");
