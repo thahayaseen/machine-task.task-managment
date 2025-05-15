@@ -9,9 +9,13 @@ export const env = {
     return process.env.MONGO_URL;
   },
   get JWT_ACCESS_SECRET(){
+    console.log(process.env.JWT_REFRESH_SECRET);
+
     return process.env.JWT_ACCESS_SECRET
   },
   get JWT_REFRESH_SECRET(){
+    console.log(process.env.JWT_REFRESH_SECRET);
+    
     return process.env.JWT_REFRESH_SECRET
   }
 };
