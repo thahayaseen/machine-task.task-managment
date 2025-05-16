@@ -31,7 +31,8 @@ export class AuthServices implements IAuthServices {
     if (!data) {
       throw createHttpError(HttpStatus.NOT_FOUND, HttpResponse.USER_NOT_FOUND);
     }
-    const compare = comparePassword(data.password, password);
+    const compare = await comparePassword(password, data.password);
+    console.log(compare);
     if (!compare) {
       throw createHttpError(
         HttpStatus.BAD_REQUEST,

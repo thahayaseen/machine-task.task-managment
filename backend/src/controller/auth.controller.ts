@@ -16,13 +16,17 @@ export class Authcontroller {
   async signIn(req: Request, res: Response, next: NextFunction) {
     try {
       const { email, password } = req.body;
-console.log(email,password,'emadn pass is ');
+      console.log(email, password, "emadn pass is ");
 
       const data = await this.authServices.sigInUser(email, password);
+      res.cookie("refresh", data.refreshToken, {
+        httpOnly: true,
+        secure: false,
+      });
       res.status(HttpStatus.CREATED).json({
         success: true,
         message: HttpResponse.USER_CREATION_SUCCESS,
-        data,
+        accessToken: data.accessToken,
       });
     } catch (error) {
       next(error);

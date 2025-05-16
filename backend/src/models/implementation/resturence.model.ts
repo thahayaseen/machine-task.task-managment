@@ -15,6 +15,7 @@ interface IGeoLocation {
 export interface IRestaurant {
   _id: Types.ObjectId;
   name: string;
+  image: string[];
   address: IAddress;
   location: IGeoLocation;
   userid?: string | Types.ObjectId;
@@ -44,9 +45,12 @@ const restaurantSchema = new Schema<IRestaurantDocument>({
     type: addressSchema,
     required: true,
   },
+  image: {
+    type: [String],
+  },
   location: {
     type: {
-      type: String, 
+      type: String,
       enum: ["Point"],
       required: true,
     },

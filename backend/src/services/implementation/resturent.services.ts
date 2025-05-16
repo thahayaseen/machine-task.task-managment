@@ -9,10 +9,25 @@ import {
 import { createHttpError, HttpError } from "@/utils/httpError.utill";
 import { HttpResponse, HttpStatus } from "@/constants";
 
-class RestaurantServices implements IRestaurantServices {
+export class RestaurantServices implements IRestaurantServices {
   private RestaurantRepository;
   constructor() {
     this.RestaurantRepository = new RestaurantRepository();
+  }
+  async createResturant(
+    data: any,
+    userid: string
+  ): Promise<IRestaurantDocument> {
+    data.userid = userid;
+    // if (data._id) {
+    //   delete data._id;
+    // }
+    data.location = {
+      type: "Point",
+      coordinates: data.coordinates,
+    };
+    console.log(data, "data is before");
+    return await this.RestaurantRepository.create(data);
   }
   async getDistence(locaion: string[]): Promise<IRestaurantDocument[]> {
     if (locaion.length !== 2) {
@@ -80,6 +95,9 @@ class RestaurantServices implements IRestaurantServices {
     }
     if (data._id) {
       delete data._id;
+    }
+    if (data.userid) {
+      delete data.userid;
     }
 
     const newdata = await this.RestaurantRepository.findByIdAndUpdate(

@@ -11,4 +11,8 @@ export interface IRestaurantServices {
     restaruantid: string,
     data: Partial<IRestaurant>
   ): Promise<IRestaurantDocument | null>;
+  createResturant(
+    data: IRestaurant,
+    userid: string
+  ): Promise<IRestaurantDocument>;
 }
