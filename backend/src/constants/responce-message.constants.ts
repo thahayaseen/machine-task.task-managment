@@ -1,3 +1,4 @@
+
 export enum HttpResponse {
     SERVER_ERROR= "Internal server error",
     USER_EXIST= "User already exist",
@@ -37,7 +38,7 @@ export enum HttpResponse {
     VOTE_ADDED= "Vote Added Successfully",
     VOTE_UPDATED= "Vote Updated Successfully",
     VOTE_REMOVED= "Vote Deleted Successfully",
-    VOTE_ALREADY_EXISTS= "Vote already exist",
+    RES_ALREADY_EXISTS= "Restaurant already exist",
     VOTE_NOT_FOUND= "Vote not found",
     TOO_MANY_REQUESTS= "Too many requests, please try again later.",
     UNFOLLOWED_SUCCESSFULL= "Unfollowed successfully",

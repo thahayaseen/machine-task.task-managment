@@ -2,9 +2,14 @@ import {
   IRestaurant,
   IRestaurantDocument,
 } from "@/models/implementation/resturence.model";
+import { IRestaurantReturn } from "@/types/responceResturents.type";
 
 export interface IRestaurantServices {
-  getDistence(locaion: string[]): Promise<IRestaurantDocument[]>;
+  getByDistence(
+    locaion: string[],
+    skip?: number,
+    limit?: number
+  ): Promise<IRestaurantReturn>;
   deleteResturent(id: string, userid: string): Promise<void>;
   updateResturentData(
     userid: string,

@@ -8,6 +8,7 @@ import {
 } from "@/models/implementation/resturence.model";
 import { createHttpError, HttpError } from "@/utils/httpError.utill";
 import { HttpResponse, HttpStatus } from "@/constants";
+import { IRestaurantReturn } from "@/types/responceResturents.type";
 
 export class RestaurantServices implements IRestaurantServices {
   private RestaurantRepository;
@@ -19,17 +20,28 @@ export class RestaurantServices implements IRestaurantServices {
     userid: string
   ): Promise<IRestaurantDocument> {
     data.userid = userid;
-    // if (data._id) {
-    //   delete data._id;
-    // }
+
     data.location = {
       type: "Point",
       coordinates: data.coordinates,
     };
+    const aldredy = await this.RestaurantRepository.findOne({
+      name: data.name,
+    });
+    if (aldredy) {
+      throw createHttpError(
+        HttpStatus.CONFLICT,
+        HttpResponse.RES_ALREADY_EXISTS
+      );
+    }
     console.log(data, "data is before");
     return await this.RestaurantRepository.create(data);
   }
-  async getDistence(locaion: string[]): Promise<IRestaurantDocument[]> {
+  async getByDistence(
+    locaion: string[],
+    page: number,
+    limit: number
+  ): Promise<IRestaurantReturn> {
     if (locaion.length !== 2) {
       throw createHttpError(
         HttpStatus.BAD_REQUEST,
@@ -48,7 +60,12 @@ export class RestaurantServices implements IRestaurantServices {
         },
       },
     };
-    return await this.RestaurantRepository.find(filer);
+    const pages = await this.RestaurantRepository.getDocumentCount(filer);
+    const data = await this.RestaurantRepository.find(filer, page, limit);
+    return {
+      page: pages,
+      data,
+    };
   }
   private async varifyUser(
     userid: Types.ObjectId,
@@ -58,7 +75,7 @@ export class RestaurantServices implements IRestaurantServices {
       restaurantid
     );
     if (RestaurantData && RestaurantData.userid) {
-      if (RestaurantData.userid !== userid) {
+      if (String(RestaurantData.userid) !== String(userid)) {
         throw createHttpError(
           HttpStatus.UNAUTHORIZED,
           "Don't Have access in this api"
@@ -100,8 +117,8 @@ export class RestaurantServices implements IRestaurantServices {
       delete data.userid;
     }
 
-    const newdata = await this.RestaurantRepository.findByIdAndUpdate(
-      new Types.ObjectId(userid),
+    const newdata = await this.RestaurantRepository.update(
+      new Types.ObjectId(restaruantid),
       data
     );
     return newdata;
