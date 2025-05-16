@@ -1,0 +1,26 @@
+import { restaurantSchema } from "./../schema/resturent.schema";
+import { RestaurantServices } from "@/services/implementation/resturent.services";
+import { Router } from "express";
+import { uploads } from "@/config";
+import { RestaurantController } from "@/controller/resturent.controller";
+const router = Router();
+const restaurantService = new RestaurantServices();
+const restaurantCotnroller = new RestaurantController(restaurantService);
+import varifyTocken from "@/middleware/varify-tocken";
+import { validate } from "@/middleware/validate.middleware";
+import { updateRestaurantSchema } from "@/schema/resturent.update.schema";
+router.get("/", restaurantCotnroller.getRestaurent.bind(restaurantCotnroller));
+router.post(
+  "/add",
+  uploads.array("images", 6),
+  validate(restaurantSchema),
+  varifyTocken("user"),
+  restaurantCotnroller.addRestaurent.bind(restaurantCotnroller)
+);
+router.put(
+  "/update/:resturentid",
+  validate(updateRestaurantSchema),
+  varifyTocken("user"),
+  restaurantCotnroller.updateRestaurent.bind(restaurantCotnroller)
+);
+export default router;
