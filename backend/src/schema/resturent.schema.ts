@@ -14,7 +14,7 @@ export const restaurantSchema = z.object({
     z.coerce.number().min(-180).max(180), // Longitude (valid range)
     z.coerce.number().min(-90).max(90), // Latitude (valid range)
   ]),
-  address: z.string(),
+  // address: z.object(),
 });
 
 export type RestaurantInput = z.infer<typeof restaurantSchema>;

@@ -56,7 +56,8 @@ export abstract class BaseRepository<T extends Document> {
   async find(
     filter: FilterQuery<T>,
     page: number = 1,
-    limit: number = 5
+    limit: number = 5,
+    pop:boolean=true
   ): Promise<T[]> {
     const qury = this.model.find(filter);
     if (page && limit) {
@@ -65,6 +66,9 @@ export abstract class BaseRepository<T extends Document> {
     }
     if (limit) {
       qury.limit(limit);
+    }
+    if(pop){
+      qury.populate('userid')
     }
 
     return qury;

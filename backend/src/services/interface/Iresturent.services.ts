@@ -20,4 +20,10 @@ export interface IRestaurantServices {
     data: IRestaurant,
     userid: string
   ): Promise<IRestaurantDocument>;
+  getByuserid(
+    userid: string,
+    page: number,
+    limit: number
+  ): Promise<IRestaurantReturn>;
+  getRestaurentById(id: string): Promise<IRestaurantDocument|null> 
 }

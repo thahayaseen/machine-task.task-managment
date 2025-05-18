@@ -56,7 +56,7 @@ export class RestaurantServices implements IRestaurantServices {
       location: {
         $near: {
           $geometry: userLocation,
-          $maxDistance: 5000,
+          $maxDistance: 25000,
         },
       },
     };
@@ -105,6 +105,8 @@ export class RestaurantServices implements IRestaurantServices {
       new Types.ObjectId(restaruantid)
     );
     if (!data) {
+      console.log("no data");
+
       throw createHttpError(
         HttpStatus.BAD_REQUEST,
         HttpResponse.INVALID_CREDENTIALS
@@ -116,11 +118,30 @@ export class RestaurantServices implements IRestaurantServices {
     if (data.userid) {
       delete data.userid;
     }
+    if (typeof data.location == "string") {
+      data.location = JSON.parse(data.location);
+    }
+    console.log(data, "after");
 
     const newdata = await this.RestaurantRepository.update(
       new Types.ObjectId(restaruantid),
       data
     );
     return newdata;
+  }
+  async getByuserid(
+    userid: string,
+    page: number,
+    limit: number
+  ): Promise<IRestaurantReturn> {
+    const filter = {
+      userid: userid,
+    };
+    const data = await this.RestaurantRepository.find(filter, page, limit);
+    const total = await this.RestaurantRepository.getDocumentCount(filter);
+    return { data, total };
+  }
+  async getRestaurentById(id: string): Promise<IRestaurantDocument|null> {
+    return await this.RestaurantRepository.findById(new Types.ObjectId(id));
   }
 }

@@ -16,6 +16,7 @@ export interface IRestaurant {
   _id: Types.ObjectId;
   name: string;
   image: string[];
+  contact: string;
   address: IAddress;
   location: IGeoLocation;
   userid?: string | Types.ObjectId;
@@ -48,6 +49,7 @@ const restaurantSchema = new Schema<IRestaurantDocument>({
   image: {
     type: [String],
   },
+  contact: String,
   location: {
     type: {
       type: String,

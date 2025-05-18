@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { HttpResponse } from "@/constants";
 export const signUpSchema = z.object({
+  username: z.string().trim().min(3,'Make sure user name entered'),
   email: z.string().email(HttpResponse.INVALID_EMAIL),
   password: z
     .string()
@@ -12,5 +13,4 @@ export const signUpSchema = z.object({
       /[^a-zA-Z0-9]/,
       "Password must contain at least one special character"
     ),
-  username: z.string(),
 });

@@ -1,196 +1,556 @@
-import React, { useState } from "react";
-
+import React, { useState, useEffect, useMemo } from "react";
+import {
+  EyeIcon,
+  EyeOffIcon,
+  Mail,
+  Lock,
+  AlertCircle,
+  User,
+  CheckCircle,
+} from "lucide-react";
+import axiosInstance from "../../services/axios.interceptor";
+import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
+/**
+ * Authentication component handling both sign-in and sign-up flows
+ * with form validation, password strength analysis, and status feedback
+ */
 function Auth() {
-  // Since react-hook-form can't be imported, we'll implement our own form handling
+  // Auth mode state
+
+  const [authMode, setAuthMode] = useState("signin"); // "signin" or "signup"
+  const navigaion = useNavigate();
+  useEffect(() => {
+    if (localStorage.getItem("access")) {
+      navigaion("/");
+    }
+  }, []);
+  // Form states
   const [formData, setFormData] = useState({
     email: "",
     password: "",
+    username: "",
   });
 
+  // UI state management
   const [errors, setErrors] = useState({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [touched, setTouched] = useState({});
   const [showPassword, setShowPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [authSuccess, setAuthSuccess] = useState(false);
 
+  // Clear form when switching auth modes
+  useEffect(() => {
+    setFormData({
+      email: "",
+      password: "",
+      username: "",
+    });
+    setErrors({});
+    setTouched({});
+    setAuthSuccess(false);
+  }, [authMode]);
+
+  // Password strength calculation
+  const passwordStrength = useMemo(() => {
+    if (!formData.password) {
+      return { score: 0, label: "Weak" };
+    }
+
+    const criteria = [
+      formData.password.length >= 8, // Has minimum length
+      /[a-z]/.test(formData.password), // Has lowercase
+      /[A-Z]/.test(formData.password), // Has uppercase
+      /\d/.test(formData.password), // Has number
+      /[!@#$%^&*(),.?":{}|<>]/.test(formData.password), // Has special char
+    ];
+
+    const score = criteria.filter(Boolean).length;
+
+    // Determine strength label
+    let label = "Weak";
+    if (score >= 5) label = "Strong";
+    else if (score >= 3) label = "Medium";
+
+    return { score, label };
+  }, [formData.password]);
+
+  // Field validation
+  const validateField = (name, value) => {
+    switch (name) {
+      case "email":
+        if (!value.trim()) return "Email is required";
+        if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(value)) {
+          return "Invalid email address";
+        }
+        return "";
+
+      case "password":
+        if (!value) return "Password is required";
+        if (authMode === "signup") {
+          if (value.length < 8) {
+            return "Password must be at least 8 characters";
+          }
+          if (!/[A-Z]/.test(value)) {
+            return "Password must contain at least one uppercase letter";
+          }
+          if (!/\d/.test(value)) {
+            return "Password must contain at least one number";
+          }
+        }
+        return "";
+
+      case "username":
+        if (authMode === "signup" && !value.trim()) {
+          return "Username is required";
+        }
+        return "";
+
+      default:
+        return "";
+    }
+  };
+
+  // Form validation
   const validateForm = () => {
+    // Only validate fields relevant to current auth mode
+    const fieldsToValidate =
+      authMode === "signin"
+        ? ["email", "password"]
+        : ["email", "password", "username"];
+
     const newErrors = {};
 
-    // Email validation
-    if (!formData.email) {
-      newErrors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "Email address is invalid";
-    }
-
-    // Password validation
-    if (!formData.password) {
-      newErrors.password = "Password is required";
-    } else if (formData.password.length < 8) {
-      newErrors.password = "Password must be at least 8 characters";
-    }
+    fieldsToValidate.forEach((field) => {
+      const error = validateField(field, formData[field]);
+      if (error) newErrors[field] = error;
+    });
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
+  // Handle field change
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
-  };
+    setFormData((prev) => ({ ...prev, [name]: value }));
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-
-    if (validateForm()) {
-      console.log("Form submitted successfully:", formData);
-      // Here you would typically make an API call for authentication
-      setTimeout(() => {
-        setIsSubmitting(false);
-        alert("Login successful!");
-      }, 1000);
-    } else {
-      setIsSubmitting(false);
+    // Live validation after user has touched a field
+    if (touched[name]) {
+      const error = validateField(name, value);
+      setErrors((prev) => ({ ...prev, [name]: error }));
     }
   };
 
+  // Mark field as touched on blur
+  const handleBlur = (e) => {
+    const { name, value } = e.target;
+    setTouched((prev) => ({ ...prev, [name]: true }));
+
+    const error = validateField(name, value);
+    setErrors((prev) => ({ ...prev, [name]: error }));
+  };
+  // const navigate=Navigate()
+  // Handle form submission
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    // Mark all fields as touched
+    const fieldsToTouch =
+      authMode === "signin"
+        ? { email: true, password: true }
+        : { email: true, password: true, username: true };
+
+    setTouched(fieldsToTouch);
+
+    if (validateForm()) {
+      setIsSubmitting(true);
+
+      try {
+        // Determine endpoint based on auth mode
+        const endpoint =
+          authMode === "signin" ? "/api/auth/login" : "/api/auth";
+
+        // Create payload - only include username for signup
+        const payload =
+          authMode === "signin"
+            ? { email: formData.email, password: formData.password }
+            : formData;
+
+        const response = await axiosInstance.post(endpoint, payload);
+        if (response) {
+          console.log(response, "fadss");
+          if (authMode == "signin") {
+            localStorage.setItem("access", response.data.accessToken);
+          }
+        }
+        // Handle successful authentication
+        setAuthSuccess(true);
+        toast.success(
+          authMode === "signin"
+            ? "Successfully signed in!"
+            : "Account created successfully!"
+        );
+        // You might handle redirection or token storage here
+        navigaion("/");
+      } catch (error) {
+        // Handle different error types
+        if (error) {
+          if (error.details) {
+            setErrors((prev) => ({ ...prev, ...error.details }));
+          } else if (error.error) {
+            toast.error(error.error);
+          }
+        }
+        console.log(error.details, "erro is");
+      } finally {
+        setIsSubmitting(false);
+      }
+    }
+  };
+
+  // Toggle password visibility
   const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
+    setShowPassword((prev) => !prev);
+  };
+
+  // Switch between sign in and sign up
+  const toggleAuthMode = () => {
+    setAuthMode((prev) => (prev === "signin" ? "signup" : "signin"));
+  };
+
+  // Get strength indicator color
+  const getStrengthColor = () => {
+    if (passwordStrength.score < 3) return "bg-red-500";
+    if (passwordStrength.score < 5) return "bg-yellow-500";
+    return "bg-green-500";
   };
 
   return (
-    <div className="h-screen w-screen flex items-center justify-center ">
-      <div className="bg-primary p-8 rounded-lg shadow-lg w-full max-w-md ">
-        <h2 className="text-2xl font-bold text-center mb-6 text-secondary">
-          Sign In
-        </h2>
+    <div className="min-h-screen w-full flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-md space-y-6 border border-gray-200">
+        {/* Header */}
+        <div className="text-center">
+          <h2 className="text-3xl font-bold text-gray-900">
+            {authMode === "signin"
+              ? "Sign in to your account"
+              : "Create an account"}
+          </h2>
+          <p className="mt-2 text-sm text-gray-600">
+            {authMode === "signin"
+              ? "Enter your credentials to access your account"
+              : "Fill in your information to get started"}
+          </p>
+        </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <div className="flex flex-col">
-              <label className="text-sm font-medium text-secondary mb-1">
-                Email
-              </label>
-              <div className="relative">
-                <input
-                  className={`w-full px-4 py-2 border ${
-                    errors.email ? "border-red-500" : "border-gray-300"
-                  } rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  placeholder="sample@email.com"
-                />
-              </div>
-            </div>
-            {errors.email && (
-              <p className="mt-1 text-sm text-red-600">{errors.email}</p>
-            )}
+        {/* Success message */}
+        {authSuccess && (
+          <div className="bg-green-50 border border-green-200 rounded-md p-4 flex items-center">
+            <CheckCircle className="h-5 w-5 text-green-500" />
+            <span className="ml-3 text-sm font-medium text-green-800">
+              {authMode === "signin"
+                ? "Successfully signed in!"
+                : "Account created successfully!"}
+            </span>
           </div>
+        )}
 
-          <div className="mb-4">
-            <div className="flex flex-col">
-              <label
-                htmlFor="password-input"
-                className="text-sm font-medium text-gray-700 mb-1">
-                Password
-              </label>
-              <div className="relative flex items-center">
-                <input
-                  id="password-input"
-                  className={`w-full px-4 py-2 border ${
-                    errors.password ? "border-red-500" : "border-gray-300"
-                  } rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-10`}
-                  type={showPassword ? "text" : "password"}
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  placeholder="Enter Password"
-                  aria-invalid={!!errors.password}
-                  aria-describedby="password-error"
-                />
-                <button
-                  type="button"
-                  className="absolute right-0 px-3 py-2 text-gray-500 hover:text-gray-700 focus:outline-none"
-                  onClick={togglePasswordVisibility}
-                  aria-label={showPassword ? "Hide password" : "Show password"}>
-                  {showPassword ? (
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5"
-                      viewBox="0 0 20 20"
-                      fill="currentColor">
-                      <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                      <path
-                        fillRule="evenodd"
-                        d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  ) : (
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5"
-                      viewBox="0 0 20 20"
-                      fill="currentColor">
-                      <path
-                        fillRule="evenodd"
-                        d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zm4.261 4.26l1.514 1.515a2.003 2.003 0 012.45 2.45l1.514 1.514a4 4 0 00-5.478-5.478z"
-                        clipRule="evenodd"
-                      />
-                      <path d="M12.454 16.697L9.75 13.992a4 4 0 01-3.742-3.741L2.335 6.578A9.98 9.98 0 00.458 10c1.274 4.057 5.065 7 9.542 7 .847 0 1.669-.105 2.454-.303z" />
-                    </svg>
-                  )}
-                </button>
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="space-y-6" noValidate>
+          {/* Email field */}
+          <div>
+            <label
+              htmlFor="email"
+              className="block text-sm font-medium text-gray-700">
+              Email address
+            </label>
+            <div className="mt-1 relative rounded-md shadow-sm">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Mail className="h-5 w-5 text-gray-400" />
               </div>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                value={formData.email}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                className={`block w-full pl-10 pr-3 py-2 sm:text-sm rounded-md focus:outline-none text-gray-900 focus:ring-2 focus:ring-offset-2 ${
+                  errors.email && touched.email
+                    ? "border-red-300 text-red-900 placeholder-red-300 focus:ring-red-500 focus:border-red-500"
+                    : "border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                }`}
+                placeholder="you@example.com"
+                aria-invalid={Boolean(errors.email)}
+                aria-describedby={errors.email ? "email-error" : undefined}
+              />
+              {errors.email && touched.email && (
+                <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                  <AlertCircle
+                    className="h-5 w-5 text-red-500"
+                    aria-hidden="true"
+                  />
+                </div>
+              )}
             </div>
-            {errors.password && (
-              <p id="password-error" className="mt-1 text-sm text-red-600">
-                {errors.password}
+            {errors.email && touched.email && (
+              <p className="mt-2 text-sm text-red-600" id="email-error">
+                {errors.email}
               </p>
             )}
           </div>
 
-          <div className="flex items-center justify-between">
-            <div className="text-sm">
-              <a className="font-medium text-secondary cursor-pointer hover:text-blue-500">
-                Forgot password?
-              </a>
+          {/* Username field (only for signup) */}
+          {authMode === "signup" && (
+            <div>
+              <label
+                htmlFor="username"
+                className="block text-sm font-medium text-gray-700">
+                Username
+              </label>
+              <div className="mt-1 relative rounded-md shadow-sm">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <User className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  id="username"
+                  name="username"
+                  type="text"
+                  autoComplete="username"
+                  value={formData.username}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  className={`block w-full pl-10 pr-3 py-2 sm:text-sm rounded-md focus:outline-none text-gray-900 focus:ring-2 focus:ring-offset-2 ${
+                    errors.username && touched.username
+                      ? "border-red-300 text-red-900 placeholder-red-300 focus:ring-red-500 focus:border-red-500"
+                      : "border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                  }`}
+                  placeholder="Choose a username"
+                  aria-invalid={Boolean(errors.username)}
+                  aria-describedby={
+                    errors.username ? "username-error" : undefined
+                  }
+                />
+                {errors.username && touched.username && (
+                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                    <AlertCircle
+                      className="h-5 w-5 text-red-500"
+                      aria-hidden="true"
+                    />
+                  </div>
+                )}
+              </div>
+              {errors.username && touched.username && (
+                <p className="mt-2 text-sm text-red-600" id="username-error">
+                  {errors.username}
+                </p>
+              )}
             </div>
+          )}
+
+          {/* Password field */}
+          <div>
+            <div className="flex justify-between items-center">
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-700">
+                Password
+              </label>
+              {authMode === "signin" && (
+                <button
+                  type="button"
+                  className="text-sm font-medium text-blue-600 hover:text-blue-500 focus:outline-none">
+                  Forgot password?
+                </button>
+              )}
+            </div>
+            <div className="mt-1 relative rounded-md shadow-sm">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Lock className="h-5 w-5 text-gray-400" />
+              </div>
+              <input
+                id="password"
+                name="password"
+                type={showPassword ? "text" : "password"}
+                autoComplete={
+                  authMode === "signin" ? "current-password" : "new-password"
+                }
+                value={formData.password}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                className={`block w-full pl-10 pr-10 py-2 sm:text-sm rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                  errors.password && touched.password
+                    ? "border-red-300 text-red-900 placeholder-red-300 focus:ring-red-500 focus:border-red-500"
+                    : "border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                }`}
+                placeholder={
+                  authMode === "signin"
+                    ? "Enter your password"
+                    : "Create a strong password"
+                }
+                aria-invalid={Boolean(errors.password)}
+                aria-describedby={
+                  errors.password ? "password-error" : undefined
+                }
+              />
+              <button
+                type="button"
+                onClick={togglePasswordVisibility}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                aria-label={showPassword ? "Hide password" : "Show password"}>
+                {showPassword ? (
+                  <EyeOffIcon className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                ) : (
+                  <EyeIcon className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                )}
+              </button>
+            </div>
+            {errors.password && touched.password ? (
+              <p className="mt-2 text-sm text-red-600" id="password-error">
+                {errors.password}
+              </p>
+            ) : (
+              authMode === "signup" &&
+              formData.password && (
+                <div className="mt-2">
+                  <p className="text-xs text-gray-600 mb-1 flex items-center">
+                    Password strength:
+                    <span
+                      className={`ml-1 font-medium ${
+                        passwordStrength.label === "Strong"
+                          ? "text-green-600"
+                          : passwordStrength.label === "Medium"
+                          ? "text-yellow-600"
+                          : "text-red-600"
+                      }`}>
+                      {passwordStrength.label}
+                    </span>
+                  </p>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div
+                      className={`${getStrengthColor()} h-2 rounded-full transition-all duration-300`}
+                      style={{
+                        width: `${(passwordStrength.score / 5) * 100}%`,
+                      }}
+                      aria-hidden="true"
+                    />
+                  </div>
+                  {authMode === "signup" && formData.password && (
+                    <ul className="mt-2 text-xs text-gray-600 space-y-1">
+                      <li
+                        className={`flex items-center ${
+                          formData.password.length >= 8
+                            ? "text-green-600"
+                            : "text-gray-500"
+                        }`}>
+                        <span className="mr-1">
+                          {formData.password.length >= 8 ? "✓" : "○"}
+                        </span>
+                        At least 8 characters
+                      </li>
+                      <li
+                        className={`flex items-center ${
+                          /[A-Z]/.test(formData.password)
+                            ? "text-green-600"
+                            : "text-gray-500"
+                        }`}>
+                        <span className="mr-1">
+                          {/[A-Z]/.test(formData.password) ? "✓" : "○"}
+                        </span>
+                        At least one uppercase letter
+                      </li>
+                      <li
+                        className={`flex items-center ${
+                          /\d/.test(formData.password)
+                            ? "text-green-600"
+                            : "text-gray-500"
+                        }`}>
+                        <span className="mr-1">
+                          {/\d/.test(formData.password) ? "✓" : "○"}
+                        </span>
+                        At least one number
+                      </li>
+                      <li
+                        className={`flex items-center ${
+                          /[!@#$%^&*(),.?":{}|<>]/.test(formData.password)
+                            ? "text-green-600"
+                            : "text-gray-500"
+                        }`}>
+                        <span className="mr-1">
+                          {/[!@#$%^&*(),.?":{}|<>]/.test(formData.password)
+                            ? "✓"
+                            : "○"}
+                        </span>
+                        At least one special character
+                      </li>
+                    </ul>
+                  )}
+                </div>
+              )
+            )}
           </div>
 
+          {/* Submit button */}
           <div>
             <button
               type="submit"
-              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              disabled={isSubmitting}>
-              {isSubmitting ? "Signing in..." : "Sign in"}
+              disabled={isSubmitting}
+              className={`group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white ${
+                isSubmitting
+                  ? "bg-blue-400 cursor-not-allowed"
+                  : "bg-blue-600 hover:bg-blue-700"
+              } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150`}>
+              {isSubmitting ? (
+                <>
+                  <svg
+                    className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true">
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    />
+                  </svg>
+                  {authMode === "signin"
+                    ? "Signing in..."
+                    : "Creating account..."}
+                </>
+              ) : authMode === "signin" ? (
+                "Sign in"
+              ) : (
+                "Sign up"
+              )}
             </button>
           </div>
         </form>
 
-        <div className="mt-6">
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">
-                Or continue with
-              </span>
-            </div>
-          </div>
+        {/* Switch between sign in and sign up */}
+        <div className="text-center">
+          <p className="text-sm text-gray-600">
+            {authMode === "signin"
+              ? "Don't have an account? "
+              : "Already have an account? "}
+            <button
+              type="button"
+              onClick={toggleAuthMode}
+              className="font-medium text-blue-600 hover:text-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-md px-1">
+              {authMode === "signin" ? "Sign up" : "Sign in"}
+            </button>
+          </p>
         </div>
-
-        <p className="mt-6 text-center text-sm text-gray-600">
-          Don't have an account?{" "}
-          <a href="#" className="font-medium text-blue-600 hover:text-blue-500">
-            Sign up
-          </a>
-        </p>
       </div>
     </div>
   );

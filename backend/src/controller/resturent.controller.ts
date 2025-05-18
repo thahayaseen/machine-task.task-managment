@@ -16,7 +16,12 @@ export class RestaurantController {
   async addRestaurent(req: Request, res: Response, next: NextFunction) {
     try {
       const data = req.body;
-      console.log(data);
+      if (data._id) {
+        delete data._id;
+      }
+      if (data.__v) {
+        delete data.__v;
+      }
 
       const { id } = (req as UserRequest).user;
       const filename = req.files;
@@ -77,6 +82,16 @@ export class RestaurantController {
     try {
       const data = req.body;
       const { resturentid } = req.params;
+      console.log(data, "dataus", { ...req.body });
+
+      if (data._id) {
+        delete data._id;
+      }
+      if (data.__v) {
+        delete data.__v;
+      }
+      data.address = JSON.parse(data.address);
+      addressSchema.parse(data.address);
       const resturent = await this.resturentService.updateResturentData(
         (req as UserRequest).user.id,
         resturentid,
@@ -85,6 +100,34 @@ export class RestaurantController {
       res.status(HttpStatus.OK).json({
         success: true,
         data: resturent,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+  async getMyResturents(req: Request, res: Response, next: NextFunction) {
+    try {
+      const page = Number(req.query.page) | 1;
+      const limit = Number(req.query.limit) | 5;
+      const data = await this.resturentService.getByuserid(
+        (req as UserRequest).user.id,
+        page,
+        limit
+      );
+      res.status(HttpStatus.OK).json({
+        success: true,
+        data,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+  async getById(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.params;
+      const data = await this.resturentService.getRestaurentById(id);
+      res.status(HttpStatus.OK).json({
+        data,
       });
     } catch (error) {
       next(error);

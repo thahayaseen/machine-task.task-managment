@@ -1,6 +1,7 @@
 import { IRestaurantDocument } from "@/models/implementation/resturence.model";
 
 export interface IRestaurantReturn{
-    page:number,
+    page?:number,
     data:IRestaurantDocument[]
+    total?:number
 }

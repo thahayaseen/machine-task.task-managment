@@ -19,8 +19,15 @@ router.post(
 );
 router.put(
   "/update/:resturentid",
+  uploads.array("images", 6),
   validate(updateRestaurantSchema),
   varifyTocken("user"),
   restaurantCotnroller.updateRestaurent.bind(restaurantCotnroller)
 );
+router.get(
+  "/my-restaurant",
+  varifyTocken("user"),
+  restaurantCotnroller.getMyResturents.bind(restaurantCotnroller)
+);
+router.get("/:id", restaurantCotnroller.getById.bind(restaurantCotnroller));
 export default router;
