@@ -9,6 +9,10 @@ export class Authcontroller {
     try {
       const data = req.body;
       await this.authServices.createUser(data);
+      res.status(HttpStatus.CREATED).json({
+        success: true,
+        message: "Created success",
+      });
     } catch (error) {
       next(error);
     }

@@ -193,7 +193,11 @@ function Auth() {
             : "Account created successfully!"
         );
         // You might handle redirection or token storage here
-        navigaion("/");
+        if (authMode == "signin") {
+          navigaion("/");
+        } else {
+          setAuthMode("signup");
+        }
       } catch (error) {
         // Handle different error types
         if (error) {
@@ -202,8 +206,10 @@ function Auth() {
           } else if (error.error) {
             toast.error(error.error);
           }
+        } else {
+          console.log(error.message, "erro is");
+          toast.error("Unable to login please try again later");
         }
-        console.log(error.details, "erro is");
       } finally {
         setIsSubmitting(false);
       }
