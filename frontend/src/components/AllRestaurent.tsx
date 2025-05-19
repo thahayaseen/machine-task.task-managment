@@ -1,131 +1,142 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import type { IRestaurant } from "../types/restaurant"
-import { fetchAllRestaurants } from "../services/api"
-import RestaurantCard from "./RestaurantCard"
-import RestaurantUploadModal from "./addResturent"
-import axiosInstance from "../services/axios.interceptor"
+import { useEffect, useState } from "react";
+import type { IRestaurant } from "../types/restaurant";
+import { fetchAllRestaurants } from "../services/api";
+import RestaurantCard from "./RestaurantCard";
+import RestaurantUploadModal from "./addResturent";
+import axiosInstance from "../services/axios.interceptor";
 
 const AllRestaurants = () => {
-  const [restaurants, setRestaurants] = useState<IRestaurant[]>([])
-  const [loading, setLoading] = useState<boolean>(true)
-  const [currentPage, setCurrentPage] = useState<number>(1)
-  const [totalPages, setTotalPages] = useState<number>(1)
-  const [totalRestaurants, setTotalRestaurants] = useState<number>(0)
-  const [isopen, setIsopen] = useState(false)
-  const [editMode, setEditMode] = useState(false)
-  const [currentRestaurant, setCurrentRestaurant] = useState<IRestaurant | null>(null)
+  const [restaurants, setRestaurants] = useState<IRestaurant[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [totalPages, setTotalPages] = useState<number>(1);
+  const [totalRestaurants, setTotalRestaurants] = useState<number>(0);
+  const [isopen, setIsopen] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [currentRestaurant, setCurrentRestaurant] =
+    useState<IRestaurant | null>(null);
 
   useEffect(() => {
     const loadAllRestaurants = async () => {
       try {
-        setLoading(true)
+        setLoading(true);
 
-        const response = await fetchAllRestaurants()
-        console.log(response.data)
+        const response = await fetchAllRestaurants();
+        console.log(response.data);
 
         // Fix: Uncomment and properly use the response data
-        setRestaurants(response.data)
-        setTotalPages(response.totalPages)
-        setTotalRestaurants(response.total)
+        setRestaurants(response.data);
+        setTotalPages(response.totalPages);
+        setTotalRestaurants(response.total);
       } catch (error) {
-        console.error("Failed to fetch all restaurants:", error)
+        console.error("Failed to fetch all restaurants:", error);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    loadAllRestaurants()
-  }, [currentPage])
+    loadAllRestaurants();
+  }, [currentPage]);
 
   const accOpen = (restaurant?: IRestaurant) => {
     if (restaurant) {
-      setCurrentRestaurant(restaurant)
-      setEditMode(true)
+      setCurrentRestaurant(restaurant);
+      setEditMode(true);
     } else {
-      setCurrentRestaurant(null)
-      setEditMode(false)
+      setCurrentRestaurant(null);
+      setEditMode(false);
     }
-    setIsopen((prev) => !prev)
-  }
+    setIsopen((prev) => !prev);
+  };
 
   const handleSubmit = async (restaurantData: any, imageFiles: File[]) => {
     try {
       // Prepare FormData object
-      const formdata = new FormData()
+      const formdata = new FormData();
 
       // If needed, restructure coordinates before appending
       if (restaurantData.location?.coordinates) {
-        restaurantData.coordinates = restaurantData.location.coordinates
+        restaurantData.coordinates = restaurantData.location.coordinates;
       }
 
       // Append all primitive fields from restaurantData
       for (const key in restaurantData) {
-        const value = restaurantData[key]
+        const value = restaurantData[key];
 
         // Skip null/undefined values and image array (we'll handle files separately)
-        if (value === null || value === undefined || key === "image") continue
+        if (value === null || value === undefined || key === "image") continue;
 
         if (typeof value === "object" && !Array.isArray(value)) {
           // Stringify objects (e.g., nested objects like coordinates)
-          formdata.append(key, JSON.stringify(value))
+          formdata.append(key, JSON.stringify(value));
         } else {
           if (Array.isArray(value)) {
             for (let i = 0; i < value.length; i++) {
-              formdata.append(key, value[i])
+              formdata.append(key, value[i]);
             }
-          } else formdata.append(key, value)
+          } else formdata.append(key, value);
         }
       }
 
       // Append image files
       if (imageFiles.length > 0) {
         imageFiles.forEach((file) => {
-          formdata.append("images", file)
-        })
+          formdata.append("images", file);
+        });
       }
 
-      console.log("Submitting restaurant data...")
+      console.log("Submitting restaurant data...");
 
-      let res
+      let res;
       if (editMode && currentRestaurant) {
         // Edit existing restaurant
-        res = await axiosInstance.put(`/api/restaurant/update/${currentRestaurant._id}`, formdata, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        })
+        res = await axiosInstance.put(
+          `/api/restaurant/update/${currentRestaurant._id}`,
+          formdata,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        );
 
         // Update the restaurant in the local state
         setRestaurants((prevRestaurants) =>
           prevRestaurants.map((restaurant) =>
-            restaurant._id === currentRestaurant._id ? { ...restaurant, ...restaurantData } : restaurant,
-          ),
-        )
+            restaurant._id === currentRestaurant._id
+              ? { ...restaurant, ...restaurantData }
+              : restaurant
+          )
+        );
       } else {
         // Add new restaurant
         res = await axiosInstance.post("/api/restaurant/add", formdata, {
           headers: {
             "Content-Type": "multipart/form-data",
           },
-        })
+        });
 
         // Refresh the restaurant list
-        const response = await fetchAllRestaurants()
-        setRestaurants(response.data)
+        const response = await fetchAllRestaurants();
+        setRestaurants(response.data);
       }
 
-      console.log("Response:", res)
-      setIsopen(false)
+      console.log("Response:", res);
+      setIsopen(false);
     } catch (error) {
-      console.error("Submission failed:", error)
+      console.error("Submission failed:", error);
     }
-  }
-
+  };
+  const handleDelete = (id: string) => {
+    setRestaurants((prev) => {
+      return prev.filter((pre) => pre._id != id);
+    });
+  };
   const handleEdit = (restaurant: IRestaurant) => {
-    accOpen(restaurant)
-  }
+    accOpen(restaurant);
+  };
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -138,15 +149,19 @@ const AllRestaurants = () => {
           editMode={editMode}
           restaurant={currentRestaurant}
         />
-        <button onClick={() => accOpen()} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+        <button
+          onClick={() => accOpen()}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
           Add Restaurant
         </button>
       </div>
 
       <div className="bg-gray-100 rounded-lg p-4 mb-6">
         <p className="text-gray-700">
-          Total Restaurants: <span className="font-semibold">{totalRestaurants}</span> | Page{" "}
-          <span className="font-semibold">{currentPage}</span> of <span className="font-semibold">{totalPages}</span>
+          Total Restaurants:{" "}
+          <span className="font-semibold">{totalRestaurants}</span> | Page{" "}
+          <span className="font-semibold">{currentPage}</span> of{" "}
+          <span className="font-semibold">{totalPages}</span>
         </p>
       </div>
 
@@ -163,6 +178,8 @@ const AllRestaurants = () => {
                   key={restaurant._id.toString()}
                   restaurant={restaurant}
                   onEdit={() => handleEdit(restaurant)}
+                  inMy={true}
+                  handleDelete={handleDelete}
                 />
               ))
             ) : (
@@ -177,30 +194,35 @@ const AllRestaurants = () => {
             <div className="flex justify-center mt-8">
               <div className="flex space-x-2">
                 <button
-                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(prev - 1, 1))
+                  }
                   disabled={currentPage === 1}
-                  className="px-4 py-2 rounded-md bg-gray-200 text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
+                  className="px-4 py-2 rounded-md bg-gray-200 text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed">
                   Previous
                 </button>
 
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                  <button
-                    key={page}
-                    onClick={() => setCurrentPage(page)}
-                    className={`px-4 py-2 rounded-md ${
-                      currentPage === page ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-700"
-                    }`}
-                  >
-                    {page}
-                  </button>
-                ))}
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                  (page) => (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`px-4 py-2 rounded-md ${
+                        currentPage === page
+                          ? "bg-blue-600 text-white"
+                          : "bg-gray-200 text-gray-700"
+                      }`}>
+                      {page}
+                    </button>
+                  )
+                )}
 
                 <button
-                  onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                  }
                   disabled={currentPage === totalPages}
-                  className="px-4 py-2 rounded-md bg-gray-200 text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
+                  className="px-4 py-2 rounded-md bg-gray-200 text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed">
                   Next
                 </button>
               </div>
@@ -209,7 +231,7 @@ const AllRestaurants = () => {
         </>
       )}
     </div>
-  )
-}
+  );
+};
 
-export default AllRestaurants
+export default AllRestaurants;

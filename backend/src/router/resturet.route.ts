@@ -30,4 +30,10 @@ router.get(
   restaurantCotnroller.getMyResturents.bind(restaurantCotnroller)
 );
 router.get("/:id", restaurantCotnroller.getById.bind(restaurantCotnroller));
+router.delete(
+  "/:id",
+  varifyTocken("user"),
+  restaurantCotnroller.deleteRestaurent.bind(restaurantCotnroller)
+);
+
 export default router;

@@ -133,4 +133,28 @@ export class RestaurantController {
       next(error);
     }
   }
+  async deleteRestaurent(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.params;
+      if (!id) {
+        throw createHttpError(HttpStatus.BAD_REQUEST, "Id Not found");
+      }
+      if (!(req as UserRequest).user.id) {
+        throw createHttpError(HttpStatus.BAD_REQUEST, "User not fournd");
+      }
+      console.log(id);
+      console.log((req as UserRequest).user.id);
+      
+      await this.resturentService.deleteResturent(
+        id,
+        (req as UserRequest).user.id
+      );
+      res.status(HttpStatus.OK).json({
+        success: true,
+        message: "delted success",
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 }

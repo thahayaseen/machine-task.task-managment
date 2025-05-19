@@ -1,13 +1,22 @@
 import type { FC } from "react";
 import { Link } from "react-router-dom";
 import type { IRestaurant } from "../types/restaurant";
+import axios from "axios";
+import axiosInstance from "../services/axios.interceptor";
 
 interface RestaurantCardProps {
   restaurant: IRestaurant;
   onEdit: (val: IRestaurant) => void;
+  inMy: boolean;
+  handleDelete: (id: string) => void;
 }
 
-const RestaurantCard: FC<RestaurantCardProps> = ({ restaurant, onEdit }) => {
+const RestaurantCard: FC<RestaurantCardProps> = ({
+  restaurant,
+  onEdit,
+  inMy,
+  handleDelete,
+}) => {
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow text-primary">
       <div className="h-48 overflow-hidden">
@@ -54,13 +63,31 @@ const RestaurantCard: FC<RestaurantCardProps> = ({ restaurant, onEdit }) => {
             className="text-blue-600 hover:text-blue-800 text-sm font-medium">
             View Details
           </Link>
-          <button
-            onClick={() => {
-              onEdit(restaurant);
-            }}
-            className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded">
-            Edit
-          </button>
+          {inMy && (
+            <>
+              <button
+                onClick={() => {
+                  onEdit(restaurant);
+                }}
+                className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded">
+                Edit
+              </button>
+              <button
+                onClick={async () => {
+                  try {
+                    await axiosInstance.delete(
+                      "/api/restaurant/" + restaurant._id
+                    );
+                    handleDelete(restaurant._id);
+                  } catch (error) {
+                    console.log(error);
+                  }
+                }}
+                className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded">
+                Delete
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>

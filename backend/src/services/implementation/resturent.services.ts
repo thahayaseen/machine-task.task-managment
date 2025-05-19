@@ -1,3 +1,4 @@
+import path from "path";
 import { RestaurantRepository } from "./../../repositories/implementation/resturent.repository";
 import { ObjectId, Types } from "mongoose";
 // import { Restaurant } from './../../models/implementation/resturence.model';
@@ -9,6 +10,7 @@ import {
 import { createHttpError, HttpError } from "@/utils/httpError.utill";
 import { HttpResponse, HttpStatus } from "@/constants";
 import { IRestaurantReturn } from "@/types/responceResturents.type";
+import { unlink } from "fs";
 
 export class RestaurantServices implements IRestaurantServices {
   private RestaurantRepository;
@@ -85,14 +87,40 @@ export class RestaurantServices implements IRestaurantServices {
     return RestaurantData;
   }
   async deleteResturent(id: string, userid: string): Promise<void> {
-    await this.varifyUser(new Types.ObjectId(userid), new Types.ObjectId(id));
+    const data = await this.varifyUser(
+      new Types.ObjectId(userid),
+      new Types.ObjectId(id)
+    );
     if (!id) {
       throw createHttpError(
         HttpStatus.BAD_REQUEST,
         HttpResponse.INVALID_CREDENTIALS
       );
     }
+    if (data && data.image) {
+      for (let i = 0; i < data.image.length; i++) {
+        console.log("fdafdsa", __dirname);
+
+        const filePath = path.join(
+          __dirname,
+          "..",
+          "..",
+          "..",
+          "public",
+          "uploads",
+          data.image[i]
+        );
+        unlink(filePath, (err) => {
+          if (err) {
+            console.log("❌ Error deleting file:", err);
+          } else {
+            console.log("✅ File deleted successfully");
+          }
+        });
+      }
+    }
     await this.RestaurantRepository.deleteOne({ _id: id });
+
     return;
   }
   async updateResturentData(
@@ -141,7 +169,7 @@ export class RestaurantServices implements IRestaurantServices {
     const total = await this.RestaurantRepository.getDocumentCount(filter);
     return { data, total };
   }
-  async getRestaurentById(id: string): Promise<IRestaurantDocument|null> {
+  async getRestaurentById(id: string): Promise<IRestaurantDocument | null> {
     return await this.RestaurantRepository.findById(new Types.ObjectId(id));
   }
 }

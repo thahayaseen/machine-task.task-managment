@@ -25,17 +25,18 @@ const Navbar = () => {
               className="px-3 py-2 text-gray-700 hover:text-gray-900">
               Home
             </Link>
-            <Link
-              to="/"
-              className="px-3 py-2 text-gray-700 hover:text-gray-900">
-              Add restu
+             <Link
+              to="/my-restaurants"
+              className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
+              onClick={() => setIsMenuOpen(false)}>
+              My Restaurants
             </Link>
        
             <Link
               to="/auth"
               onClick={() => {
                 localStorage.removeItem("access");
-                // navigator("/auth");
+                navigator("/auth");
               }}
               className="px-3 py-2 text-gray-700 hover:text-gray-900">
               Log out
@@ -85,7 +86,7 @@ const Navbar = () => {
               Home
             </Link>
             <Link
-              to="/restaurants"
+              to="/my-restaurants"
               className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
               onClick={() => setIsMenuOpen(false)}>
               All Restaurants
