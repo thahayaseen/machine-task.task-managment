@@ -1,8 +1,9 @@
 // axiosInstance.ts
 import axios from "axios";
+console.log(import.meta.env.VITE_BAKEND);
 
 const axiosInstance = axios.create({
-  baseURL: "http://localhost:4050", // replace with your actual API URL
+  baseURL: import.meta.env.VITE_BAKEND, // replace with your actual API URL
   withCredentials: true, // always send cookies
 });
 

@@ -41,7 +41,7 @@ const RestaurantCard: FC<RestaurantCardProps> = ({
         <img
           src={
             restaurant.image && restaurant.image[0]
-              ? `http://localhost:4050/uploads/${restaurant.image[0]}`
+              ? `${import.meta.env.VITE_BAKEND}/uploads/${restaurant.image[0]}`
               : "/placeholder.svg?height=192&width=384"
           }
           alt={restaurant.name}

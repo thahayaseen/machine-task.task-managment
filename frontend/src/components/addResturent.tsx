@@ -1,37 +1,37 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState, useEffect, useRef } from "react"
-import { X, Upload, MapPin, Search } from "lucide-react"
-import "./RestaurantUploadModal.css"
+import type React from "react";
+import { useState, useEffect, useRef } from "react";
+import { X, Upload, MapPin, Search } from "lucide-react";
+import "./RestaurantUploadModal.css";
 
 // Define interfaces for restaurant data
 interface IAddress {
-  address_line: string
-  pincode: number
+  address_line: string;
+  pincode: number;
 }
 
 interface IGeoLocation {
-  type: "Point"
-  coordinates: [number, number]
+  type: "Point";
+  coordinates: [number, number];
 }
 
 interface IRestaurant {
-  _id?: string
-  name: string
-  image: string[]
-  contact: number
-  address: IAddress
-  location: IGeoLocation
-  userid?: string
+  _id?: string;
+  name: string;
+  image: string[];
+  contact: number;
+  address: IAddress;
+  location: IGeoLocation;
+  userid?: string;
 }
 
 interface RestaurantUploadModalProps {
-  isOpen: boolean
-  onClose: () => void
-  onSubmit: (restaurantData: IRestaurant, imageFiles: File[]) => void
-  editMode?: boolean
-  restaurant?: IRestaurant | null
+  isOpen: boolean;
+  onClose: () => void;
+  onSubmit: (restaurantData: IRestaurant, imageFiles: File[]) => void;
+  editMode?: boolean;
+  restaurant?: IRestaurant | null;
 }
 
 const RestaurantUploadModal = ({
@@ -41,12 +41,13 @@ const RestaurantUploadModal = ({
   editMode = false,
   restaurant = null,
 }: RestaurantUploadModalProps) => {
-  const modalRef = useRef<HTMLDivElement>(null)
-  const mapRef = useRef<HTMLDivElement>(null)
-  const searchBoxRef = useRef<HTMLInputElement>(null)
-  const [map, setMap] = useState<google.maps.Map | null>(null)
-  const [marker, setMarker] = useState<google.maps.Marker | null>(null)
-  const [searchBox, setSearchBox] = useState<google.maps.places.SearchBox | null>(null)
+  const modalRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<HTMLDivElement>(null);
+  const searchBoxRef = useRef<HTMLInputElement>(null);
+  const [map, setMap] = useState<google.maps.Map | null>(null);
+  const [marker, setMarker] = useState<google.maps.Marker | null>(null);
+  const [searchBox, setSearchBox] =
+    useState<google.maps.places.SearchBox | null>(null);
 
   // Form state
   const [formData, setFormData] = useState<IRestaurant>({
@@ -61,12 +62,12 @@ const RestaurantUploadModal = ({
       type: "Point",
       coordinates: [0, 0],
     },
-  })
+  });
 
-  const [imageFiles, setImageFiles] = useState<File[]>([])
-  const [imagePreviews, setImagePreviews] = useState<string[]>([])
-  const [formErrors, setFormErrors] = useState<Record<string, string>>({})
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Initialize form data for edit mode
   useEffect(() => {
@@ -74,11 +75,11 @@ const RestaurantUploadModal = ({
       setFormData({
         ...restaurant,
         image: restaurant.image || [],
-      })
+      });
 
       // Set image previews if available
       if (restaurant.image && restaurant.image.length > 0) {
-        setImagePreviews(restaurant.image)
+        setImagePreviews(restaurant.image);
       }
     } else if (isOpen && !editMode) {
       // Reset form for new restaurant
@@ -94,39 +95,47 @@ const RestaurantUploadModal = ({
           type: "Point",
           coordinates: [0, 0],
         },
-      })
-      setImageFiles([])
-      setImagePreviews([])
-      setFormErrors({})
+      });
+      setImageFiles([]);
+      setImagePreviews([]);
+      setFormErrors({});
     }
-  }, [isOpen, editMode, restaurant])
+  }, [isOpen, editMode, restaurant]);
 
   // Initialize map
   useEffect(() => {
     if (isOpen && mapRef.current && !map) {
       // Default coordinates (can be set to user's current location)
       const defaultLocation = {
-        lat: editMode && restaurant?.location?.coordinates?.[0] ? restaurant.location.coordinates[0] : 28.6139,
-        lng: editMode && restaurant?.location?.coordinates?.[1] ? restaurant.location.coordinates[1] : 77.209,
-      }
+        lat:
+          editMode && restaurant?.location?.coordinates?.[0]
+            ? restaurant.location.coordinates[0]
+            : 28.6139,
+        lng:
+          editMode && restaurant?.location?.coordinates?.[1]
+            ? restaurant.location.coordinates[1]
+            : 77.209,
+      };
 
       // Load Google Maps script if not already loaded
       if (!window.google || !window.google.maps) {
-        const script = document.createElement("script")
-        script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyDIHYzCicANpsaHcmzPI9UIMY_xnrAUEP4&libraries=places`
-        script.async = true
-        script.defer = true
-        script.onload = () => initializeMap(defaultLocation)
-        document.head.appendChild(script)
+        const script = document.createElement("script");
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${
+          import.meta.env.VITE_GOOGLEMAP
+        }&libraries=places`;
+        script.async = true;
+        script.defer = true;
+        script.onload = () => initializeMap(defaultLocation);
+        document.head.appendChild(script);
       } else {
-        initializeMap(defaultLocation)
+        initializeMap(defaultLocation);
       }
     }
-  }, [isOpen, map, editMode, restaurant])
+  }, [isOpen, map, editMode, restaurant]);
 
   // Initialize map function
   const initializeMap = (defaultLocation: { lat: number; lng: number }) => {
-    if (!mapRef.current) return
+    if (!mapRef.current) return;
 
     const mapOptions = {
       center: defaultLocation,
@@ -134,10 +143,10 @@ const RestaurantUploadModal = ({
       mapTypeControl: false,
       streetViewControl: false,
       fullscreenControl: false,
-    }
+    };
 
-    const newMap = new google.maps.Map(mapRef.current, mapOptions)
-    setMap(newMap)
+    const newMap = new google.maps.Map(mapRef.current, mapOptions);
+    setMap(newMap);
 
     const newMarker = new google.maps.Marker({
       position: defaultLocation,
@@ -145,61 +154,65 @@ const RestaurantUploadModal = ({
       draggable: true,
       title: "Restaurant Location",
       animation: google.maps.Animation.DROP,
-    })
-    setMarker(newMarker)
+    });
+    setMarker(newMarker);
 
     // Update coordinates when marker is dragged
     google.maps.event.addListener(newMarker, "dragend", () => {
-      const position = newMarker.getPosition()
+      const position = newMarker.getPosition();
       if (position) {
-        updateLocationAndAddress(position.lat(), position.lng())
+        updateLocationAndAddress(position.lat(), position.lng());
       }
-    })
+    });
 
     // Allow clicking on map to move marker
     google.maps.event.addListener(newMap, "click", (event) => {
-      newMarker.setPosition(event.latLng)
-      updateLocationAndAddress(event.latLng.lat(), event.latLng.lng())
-    })
+      newMarker.setPosition(event.latLng);
+      updateLocationAndAddress(event.latLng.lat(), event.latLng.lng());
+    });
 
     // Handle double click on map to update address
     google.maps.event.addListener(newMap, "dblclick", (event) => {
-      newMarker.setPosition(event.latLng)
-      updateLocationAndAddress(event.latLng.lat(), event.latLng.lng(), true)
-    })
+      newMarker.setPosition(event.latLng);
+      updateLocationAndAddress(event.latLng.lat(), event.latLng.lng(), true);
+    });
 
     // Initialize with default location
-    updateLocationAndAddress(defaultLocation.lat, defaultLocation.lng)
+    updateLocationAndAddress(defaultLocation.lat, defaultLocation.lng);
 
     // Add search box
     if (searchBoxRef.current) {
-      const searchBoxInstance = new google.maps.places.SearchBox(searchBoxRef.current)
-      setSearchBox(searchBoxInstance)
+      const searchBoxInstance = new google.maps.places.SearchBox(
+        searchBoxRef.current
+      );
+      setSearchBox(searchBoxInstance);
 
       newMap.addListener("bounds_changed", () => {
-        searchBoxInstance.setBounds(newMap.getBounds() as google.maps.LatLngBounds)
-      })
+        searchBoxInstance.setBounds(
+          newMap.getBounds() as google.maps.LatLngBounds
+        );
+      });
 
       // Fix: Prevent event propagation to avoid closing modal
       searchBoxRef.current.addEventListener("click", (e) => {
-        e.stopPropagation()
-      })
+        e.stopPropagation();
+      });
 
       searchBoxInstance.addListener("places_changed", () => {
-        const places = searchBoxInstance.getPlaces()
+        const places = searchBoxInstance.getPlaces();
         if (places && places.length > 0) {
-          const place = places[0]
+          const place = places[0];
           if (place.geometry && place.geometry.location) {
-            newMap.setCenter(place.geometry.location)
-            newMarker.setPosition(place.geometry.location)
+            newMap.setCenter(place.geometry.location);
+            newMarker.setPosition(place.geometry.location);
 
             // Extract pincode from address components
-            let pincode = 0
+            let pincode = 0;
             if (place.address_components) {
               for (const component of place.address_components) {
                 if (component.types.includes("postal_code")) {
-                  pincode = Number.parseInt(component.long_name) || 0
-                  break
+                  pincode = Number.parseInt(component.long_name) || 0;
+                  break;
                 }
               }
             }
@@ -208,42 +221,50 @@ const RestaurantUploadModal = ({
               ...prev,
               location: {
                 type: "Point",
-                coordinates: [place.geometry.location.lat(), place.geometry.location.lng()],
+                coordinates: [
+                  place.geometry.location.lat(),
+                  place.geometry.location.lng(),
+                ],
               },
               address: {
-                address_line: place.formatted_address || prev.address.address_line,
+                address_line:
+                  place.formatted_address || prev.address.address_line,
                 pincode: pincode || prev.address.pincode,
               },
-            }))
+            }));
           }
         }
-      })
+      });
     }
-  }
+  };
 
   // Helper function to update location and fetch address if needed
-  const updateLocationAndAddress = (lat: number, lng: number, fetchAddress = false) => {
+  const updateLocationAndAddress = (
+    lat: number,
+    lng: number,
+    fetchAddress = false
+  ) => {
     setFormData((prev) => ({
       ...prev,
       location: {
         type: "Point",
         coordinates: [lat, lng],
       },
-    }))
+    }));
 
     if (fetchAddress && window.google) {
-      const geocoder = new google.maps.Geocoder()
+      const geocoder = new google.maps.Geocoder();
       geocoder.geocode({ location: { lat, lng } }, (results, status) => {
         if (status === "OK" && results && results[0]) {
-          const place = results[0]
+          const place = results[0];
 
           // Extract pincode from address components
-          let pincode = 0
+          let pincode = 0;
           if (place.address_components) {
             for (const component of place.address_components) {
               if (component.types.includes("postal_code")) {
-                pincode = Number.parseInt(component.long_name) || 0
-                break
+                pincode = Number.parseInt(component.long_name) || 0;
+                break;
               }
             }
           }
@@ -251,18 +272,21 @@ const RestaurantUploadModal = ({
           setFormData((prev) => ({
             ...prev,
             address: {
-              address_line: place.formatted_address || prev.address.address_line,
+              address_line:
+                place.formatted_address || prev.address.address_line,
               pincode: pincode || prev.address.pincode,
             },
-          }))
+          }));
         }
-      })
+      });
     }
-  }
+  };
 
   // Handle form input changes
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
 
     if (name === "address_line") {
       setFormData((prev) => ({
@@ -271,7 +295,7 @@ const RestaurantUploadModal = ({
           ...prev.address,
           address_line: value,
         },
-      }))
+      }));
     } else if (name === "pincode") {
       setFormData((prev) => ({
         ...prev,
@@ -279,121 +303,128 @@ const RestaurantUploadModal = ({
           ...prev.address,
           pincode: Number.parseInt(value) || 0,
         },
-      }))
+      }));
     } else {
       setFormData((prev) => ({
         ...prev,
         [name]: name === "contact" ? Number.parseInt(value) || 0 : value,
-      }))
+      }));
     }
 
     // Clear error for this field if it exists
     if (formErrors[name]) {
       setFormErrors((prev) => {
-        const newErrors = { ...prev }
-        delete newErrors[name]
-        return newErrors
-      })
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
     }
-  }
+  };
 
   // Handle image upload
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files
+    const files = e.target.files;
     if (files && files.length > 0) {
-      const newFiles = Array.from(files)
-      setImageFiles((prev) => [...prev, ...newFiles])
+      const newFiles = Array.from(files);
+      setImageFiles((prev) => [...prev, ...newFiles]);
 
       // Create previews for new files
       newFiles.forEach((file) => {
-        const reader = new FileReader()
+        const reader = new FileReader();
         reader.onloadend = () => {
-          setImagePreviews((prev) => [...prev, reader.result as string])
-        }
-        reader.readAsDataURL(file)
-      })
+          setImagePreviews((prev) => [...prev, reader.result as string]);
+        };
+        reader.readAsDataURL(file);
+      });
     }
-  }
+  };
 
   // Remove image
   const handleRemoveImage = (index: number) => {
-    setImageFiles((prev) => prev.filter((_, i) => i !== index))
-    setImagePreviews((prev) => prev.filter((_, i) => i !== index))
-  }
+    setImageFiles((prev) => prev.filter((_, i) => i !== index));
+    setImagePreviews((prev) => prev.filter((_, i) => i !== index));
+  };
 
   // Validate form
   const validateForm = () => {
-    const errors: Record<string, string> = {}
+    const errors: Record<string, string> = {};
 
-    if (!formData.name.trim()) errors.name = "Restaurant name is required"
-    if (!formData.contact) errors.contact = "Contact number is required"
+    if (!formData.name.trim()) errors.name = "Restaurant name is required";
+    if (!formData.contact) errors.contact = "Contact number is required";
     if (formData.contact && formData.contact.toString().length !== 10)
-      errors.contact = "Contact number must be 10 digits"
-    if (!formData.address.address_line.trim()) errors.address_line = "Address is required"
-    if (!formData.address.pincode) errors.pincode = "Pincode is required"
-    if (formData.address.pincode && formData.address.pincode.toString().length !== 6)
-      errors.pincode = "Pincode must be 6 digits"
+      errors.contact = "Contact number must be 10 digits";
+    if (!formData.address.address_line.trim())
+      errors.address_line = "Address is required";
+    if (!formData.address.pincode) errors.pincode = "Pincode is required";
+    if (
+      formData.address.pincode &&
+      formData.address.pincode.toString().length !== 6
+    )
+      errors.pincode = "Pincode must be 6 digits";
 
     // Validate images only for new restaurants
     if (!editMode && imageFiles.length === 0) {
-      errors.image = "At least one image is required"
+      errors.image = "At least one image is required";
     }
 
-    setFormErrors(errors)
-    return Object.keys(errors).length === 0
-  }
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
   // Handle form submission
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
     if (validateForm()) {
-      setIsSubmitting(true)
+      setIsSubmitting(true);
 
       // Only send image files if there are any
-      onSubmit(formData, imageFiles)
+      onSubmit(formData, imageFiles);
 
-      setIsSubmitting(false)
-      mapRef.current = null
-      setMap(null)
-      onClose()
+      setIsSubmitting(false);
+      mapRef.current = null;
+      setMap(null);
+      onClose();
     }
-  }
+  };
 
   // Close modal when clicking outside
   useEffect(() => {
     const handleOutsideClick = (event: MouseEvent) => {
-      if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
-        mapRef.current = null
-        setMap(null)
-        onClose()
+      if (
+        modalRef.current &&
+        !modalRef.current.contains(event.target as Node)
+      ) {
+        mapRef.current = null;
+        setMap(null);
+        onClose();
       }
-    }
+    };
 
     // Close modal when pressing Escape key
     const handleEscKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        mapRef.current = null
-        setMap(null)
-        onClose()
+        mapRef.current = null;
+        setMap(null);
+        onClose();
       }
-    }
+    };
 
     if (isOpen) {
-      document.addEventListener("mousedown", handleOutsideClick)
-      document.addEventListener("keydown", handleEscKey)
+      document.addEventListener("mousedown", handleOutsideClick);
+      document.addEventListener("keydown", handleEscKey);
       // Prevent scrolling of background content
-      document.body.style.overflow = "hidden"
+      document.body.style.overflow = "hidden";
     }
 
     return () => {
-      document.removeEventListener("mousedown", handleOutsideClick)
-      document.removeEventListener("keydown", handleEscKey)
-      document.body.style.overflow = ""
-    }
-  }, [isOpen, onClose])
+      document.removeEventListener("mousedown", handleOutsideClick);
+      document.removeEventListener("keydown", handleEscKey);
+      document.body.style.overflow = "";
+    };
+  }, [isOpen, onClose]);
 
-  if (!isOpen) return null
+  if (!isOpen) return null;
 
   return (
     <div className="restaurant-modal-overlay">
@@ -403,11 +434,10 @@ const RestaurantUploadModal = ({
           <button
             className="restaurant-modal-close"
             onClick={() => {
-              mapRef.current = null
-              setMap(null)
-              onClose()
-            }}
-          >
+              mapRef.current = null;
+              setMap(null);
+              onClose();
+            }}>
             <X size={20} />
           </button>
         </div>
@@ -428,7 +458,9 @@ const RestaurantUploadModal = ({
                     className={formErrors.name ? "error" : "text-primary"}
                     placeholder="Enter restaurant name"
                   />
-                  {formErrors.name && <span className="error-message">{formErrors.name}</span>}
+                  {formErrors.name && (
+                    <span className="error-message">{formErrors.name}</span>
+                  )}
                 </div>
 
                 <div className="form-group">
@@ -442,7 +474,9 @@ const RestaurantUploadModal = ({
                     className={formErrors.contact ? "error" : "text-primary"}
                     placeholder="10-digit contact number"
                   />
-                  {formErrors.contact && <span className="error-message">{formErrors.contact}</span>}
+                  {formErrors.contact && (
+                    <span className="error-message">{formErrors.contact}</span>
+                  )}
                 </div>
 
                 <div className="form-group">
@@ -452,10 +486,16 @@ const RestaurantUploadModal = ({
                     name="address_line"
                     value={formData.address.address_line}
                     onChange={handleChange}
-                    className={formErrors.address_line ? "error" : "text-primary"}
+                    className={
+                      formErrors.address_line ? "error" : "text-primary"
+                    }
                     placeholder="Full address"
                   />
-                  {formErrors.address_line && <span className="error-message">{formErrors.address_line}</span>}
+                  {formErrors.address_line && (
+                    <span className="error-message">
+                      {formErrors.address_line}
+                    </span>
+                  )}
                 </div>
 
                 <div className="form-group">
@@ -469,7 +509,9 @@ const RestaurantUploadModal = ({
                     className={formErrors.pincode ? "error" : "text-primary"}
                     placeholder="6-digit pincode"
                   />
-                  {formErrors.pincode && <span className="error-message">{formErrors.pincode}</span>}
+                  {formErrors.pincode && (
+                    <span className="error-message">{formErrors.pincode}</span>
+                  )}
                 </div>
 
                 <div className="form-group">
@@ -488,15 +530,23 @@ const RestaurantUploadModal = ({
                       multiple
                       className="hidden-input"
                     />
-                    {formErrors.image && <span className="error-message">{formErrors.image}</span>}
+                    {formErrors.image && (
+                      <span className="error-message">{formErrors.image}</span>
+                    )}
                   </div>
 
                   {imagePreviews.length > 0 && (
                     <div className="image-previews">
                       {imagePreviews.map((preview, index) => (
                         <div key={index} className="image-preview-item">
-                          <img src={preview || "/placeholder.svg"} alt={`Preview ${index + 1}`} />
-                          <button type="button" className="remove-image-btn" onClick={() => handleRemoveImage(index)}>
+                          <img
+                            src={preview || "/placeholder.svg"}
+                            alt={`Preview ${index + 1}`}
+                          />
+                          <button
+                            type="button"
+                            className="remove-image-btn"
+                            onClick={() => handleRemoveImage(index)}>
                             <X size={16} />
                           </button>
                         </div>
@@ -527,7 +577,8 @@ const RestaurantUploadModal = ({
                 <div className="coordinates-display">
                   <MapPin size={16} className="coordinates-icon" />
                   <p>
-                    <strong>Selected Coordinates:</strong> Lat: {formData.location.coordinates[0].toFixed(6)}, Lng:{" "}
+                    <strong>Selected Coordinates:</strong> Lat:{" "}
+                    {formData.location.coordinates[0].toFixed(6)}, Lng:{" "}
                     {formData.location.coordinates[1].toFixed(6)}
                   </p>
                 </div>
@@ -539,22 +590,28 @@ const RestaurantUploadModal = ({
                 type="button"
                 className="cancel-button"
                 onClick={() => {
-                  mapRef.current = null
-                  setMap(null)
-                  onClose()
-                }}
-              >
+                  mapRef.current = null;
+                  setMap(null);
+                  onClose();
+                }}>
                 Cancel
               </button>
-              <button type="submit" className="submit-button" disabled={isSubmitting}>
-                {isSubmitting ? "Saving..." : editMode ? "Update Restaurant" : "Save Restaurant"}
+              <button
+                type="submit"
+                className="submit-button"
+                disabled={isSubmitting}>
+                {isSubmitting
+                  ? "Saving..."
+                  : editMode
+                  ? "Update Restaurant"
+                  : "Save Restaurant"}
               </button>
             </div>
           </form>
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default RestaurantUploadModal
+export default RestaurantUploadModal;
