@@ -1,69 +1,73 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import type { IRestaurant } from "../../types/restaurant"
-import { fetchRestaurants } from "../../services/api"
-import RestaurantCard from "../RestaurantCard"
-import LocationPrompt from "../LocationPrompt"
+import { useEffect, useState } from "react";
+import type { IRestaurant } from "../../types/restaurant";
+import { fetchRestaurants } from "../../services/api";
+import RestaurantCard from "../RestaurantCard";
+import LocationPrompt from "../LocationPrompt";
 
 const RestaurantHome = () => {
-  const [restaurants, setRestaurants] = useState<IRestaurant[]>([])
-  const [loading, setLoading] = useState<boolean>(true)
-  const [locationGranted, setLocationGranted] = useState<boolean | null>(null)
-  const [coordinates, setCoordinates] = useState<[number, number] | null>(null)
+  const [restaurants, setRestaurants] = useState<IRestaurant[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  // const [locationGranted, setLocationGranted] = useState<boolean | null>(null);
+  const [coordinates, setCoordinates] = useState<[number, number] | null>([
+    11.1527788, 75.8882395,
+  ]);
 
-  useEffect(() => {
-    // Request location permission
-    const getLocation = () => {
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            const coords: [number, number] = [position.coords.latitude, position.coords.longitude]
-            setCoordinates(coords)
-            setLocationGranted(true)
-          },
-          (error) => {
-            console.error("Error getting location:", error)
-            setLocationGranted(false)
-            setLoading(false)
-          },
-        )
-      } else {
-        setLocationGranted(false)
-        setLoading(false)
-      }
-    }
+  // useEffect(() => {
+  //   // Request location permission
+  //   const getLocation = () => {
+  //     if (navigator.geolocation) {
+  //       navigator.geolocation.getCurrentPosition(
+  //         (position) => {
+  //           const coords: [number, number] = [
+  //             position.coords.latitude,
+  //             position.coords.longitude,
+  //           ];
+  //           setCoordinates(coords);
+  //           setLocationGranted(true);
+  //         },
+  //         (error) => {
+  //           console.error("Error getting location:", error);
+  //           setLocationGranted(false);
+  //           setLoading(false);
+  //         }
+  //       );
+  //     } else {
+  //       setLocationGranted(false);
+  //       setLoading(false);
+  //     }
+  //   };
 
-    getLocation()
-  }, [])
+  //   getLocation();
+  // }, []);
 
   useEffect(() => {
     const loadRestaurants = async () => {
       if (coordinates) {
         try {
-          setLoading(true)
+          setLoading(true);
           // Call API with latitude and longitude
-          const [latitude, longitude] = coordinates
-          const response = await fetchRestaurants(latitude, longitude)
-     
-          
-          setRestaurants(response.data.data.data)
+          const [latitude, longitude] = coordinates;
+          const response = await fetchRestaurants(latitude, longitude);
+
+          setRestaurants(response.data.data.data);
         } catch (error) {
-          console.error("Failed to fetch restaurants:", error)
+          console.error("Failed to fetch restaurants:", error);
         } finally {
-          setLoading(false)
+          setLoading(false);
         }
       }
-    }
+    };
 
     if (coordinates) {
-      loadRestaurants()
+      loadRestaurants();
     }
-  }, [coordinates])
+  }, [coordinates]);
 
-  if (locationGranted === false) {
-    return <LocationPrompt onRetry={() => window.location.reload()} />
-  }
+  // if (locationGranted === false) {
+  //   return <LocationPrompt onRetry={() => window.location.reload()} />;
+  // }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -76,16 +80,23 @@ const RestaurantHome = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {restaurants.length > 0 ? (
-            restaurants.map((restaurant) => <RestaurantCard key={restaurant._id.toString()} restaurant={restaurant} />)
+            restaurants.map((restaurant) => (
+              <RestaurantCard
+                key={restaurant._id.toString()}
+                restaurant={restaurant}
+              />
+            ))
           ) : (
             <div className="col-span-full text-center py-10">
-              <p className="text-lg text-gray-600">No restaurants found in your area.</p>
+              <p className="text-lg text-gray-600">
+                No restaurants found in your area.
+              </p>
             </div>
           )}
         </div>
       )}
     </div>
-  )
-}
+  );
+};
 
-export default RestaurantHome
+export default RestaurantHome;
